@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ t('journal.title') }} · Video Optimizer{% endblock %}
+{% block content %}
+<header class="page-head">
+  <h1>{{ t('journal.title') }}</h1>
+  <nav class="tabs" role="tablist">
+    <a href="#jobs" role="tab" data-tab="jobs" class="active">{{ t('journal.jobs') }} <em id="jobs-count"></em></a>
+    <a href="#runs" role="tab" data-tab="runs">{{ t('journal.scheduler_runs') }} <em id="runs-count"></em></a>
+  </nav>
+</header>
+
+<section id="tab-jobs" class="card" data-panel="jobs">
+  <form id="journal-filters" class="toolbar wrap">
+    <div id="journal-filter" class="chips" role="group" aria-label="{{ t('table.status') }}">
+      <button type="button" data-filter="" class="active">{{ t('journal.filter_all') }}</button>
+      <button type="button" data-filter="replaced">{{ t('journal.filter_replaced') }}</button>
+      <button type="button" data-filter="backup">{{ t('journal.filter_backup') }}</button>
+      <button type="button" data-filter="restored">{{ t('journal.filter_restored') }}</button>
+      <button type="button" data-filter="failed,interrupted,rejected_saving,replacement_interrupted,restore_interrupted">{{ t('journal.filter_problems') }}</button>
+      <button type="button" data-filter="discarded,cancelled">{{ t('journal.filter_discarded') }}</button>
+    </div>
+    <select name="created_by" aria-label="{{ t('table.added_by') }}"><option value="">{{ t('journal.any_source') }}</option><option value="admin">{{ t('source.admin') }}</option><option value="scheduler">{{ t('source.scheduler') }}</option></select>
+    <input name="query" type="search" placeholder="{{ t('library.search_placeholder') }}" aria-label="{{ t('library.search') }}">
+    <span id="journal-total" class="meta"></span>
+    <button id="delete-all-backups" class="button small danger" type="button" hidden></button>
+  </form>
+  <div class="table-wrap"><table class="data-table jobs-table"><thead><tr>
+    <th data-sort="id" class="num-col">{{ t('table.number') }}</th><th data-sort="status">{{ t('table.status') }}</th><th data-sort="file">{{ t('table.file') }}</th>
+    <th data-sort="size" class="right">{{ t('table.size') }}</th><th data-sort="source">{{ t('table.added_by') }}</th>
+    <th data-sort="finished">{{ t('table.completed') }}</th><th>{{ t('table.backup') }}</th>
+  </tr></thead><tbody id="journal-rows"><tr><td colspan="7" class="empty">{{ t('table.loading') }}</td></tr></tbody></table></div>
+  <div id="journal-pagination" class="pagination"></div>
+</section>
+
+<section id="tab-runs" class="card" data-panel="runs" hidden>
+  <div class="table-wrap"><table class="data-table"><thead><tr>
+    <th class="num-col">{{ t('table.number') }}</th><th>{{ t('journal.started') }}</th><th>{{ t('journal.run') }}</th><th>{{ t('table.status') }}</th>
+    <th class="right">{{ t('journal.candidates') }}</th><th class="right">{{ t('journal.added') }}</th><th>{{ t('journal.message') }}</th>
+  </tr></thead><tbody id="scheduler-run-rows"><tr><td colspan="7" class="empty">{{ t('table.loading') }}</td></tr></tbody></table></div>
+  <div id="scheduler-runs-pagination" class="pagination"></div>
+</section>
+{% endblock %}

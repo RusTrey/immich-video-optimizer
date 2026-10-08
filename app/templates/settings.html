@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ t('settings.title') }} · Video Optimizer{% endblock %}
+{% block content %}
+<header class="page-head"><h1>{{ t('settings.title') }}</h1></header>
+
+<form id="encoding-profile" class="card" data-dirty-form>
+  <div class="card-head"><div><h2>{{ t('settings.encoding') }}</h2><span class="meta">{{ t('settings.profile_description') }}</span></div></div>
+  <div class="form-grid">
+    <label><span>{{ t('settings.encoder') }}</span><select name="encoder"><option value="x265">H.265 / x265</option><option value="x264">H.264 / x264</option></select><small>{{ t('settings.encoder_hint') }}</small></label>
+    <label><span>{{ t('settings.quality') }}</span><div class="range-field"><input name="quality" type="range" min="16" max="30" step="1"><output id="quality-value">RF 20</output></div><small>{{ t('settings.quality_hint') }}</small></label>
+    <label><span>{{ t('settings.limit') }}</span><select name="resolution"><option value="720p">720p</option><option value="1080p">1080p</option><option value="1440p">1440p</option><option value="2160p">2160p / 4K</option></select><small id="resolution-hint"></small></label>
+    <label><span>{{ t('settings.audio') }}</span><select name="audio_bitrate"><option value="192">AAC passthrough / 192 {{ t('unit.kbps') }}</option><option value="320">AAC passthrough / 320 {{ t('unit.kbps') }}</option></select><small>{{ t('settings.audio_hint') }}</small></label>
+    <label><span>{{ t('settings.cpu_count') }}</span><select name="cpu_count"></select><small id="cpu-hint"></small></label>
+    <label><span>{{ t('settings.priority') }}</span><select name="priority"><option value="normal">{{ t('settings.priority_normal') }}</option><option value="low">{{ t('settings.priority_low') }}</option><option value="background">{{ t('settings.priority_background') }}</option></select><small>{{ t('settings.priority_hint') }}</small></label>
+  </div>
+  <div class="form-foot"><span class="dirty-note" hidden>{{ t('settings.unsaved') }}</span><button class="button primary" type="submit">{{ t('settings.save') }}</button></div>
+</form>
+
+<form id="scheduler-settings" class="settings-stack" data-dirty-form>
+  <section id="scheduler" class="card">
+    <div class="card-head">
+      <div><h2>{{ t('settings.scheduler') }}</h2><span class="meta">{{ t('settings.scheduler_description') }}</span></div>
+      <label class="switch"><input id="scheduler-enabled" name="enabled" type="checkbox"><span></span><b>{{ t('settings.enable') }}</b></label>
+    </div>
+    <fieldset class="plain" data-scheduler-part>
+      <div class="form-grid">
+        <label><span>{{ t('settings.time') }}</span><input name="time" type="time" required></label>
+        <label><span>{{ t('settings.timezone') }}</span><input name="timezone" required spellcheck="false" placeholder="Europe/Berlin"></label>
+        <label><span>{{ t('settings.jobs_per_run') }}</span><input name="maximum_jobs_per_run" type="number" min="1" max="1000"></label>
+        <label><span>{{ t('settings.grace') }}</span><input name="missed_run_grace_minutes" type="number" min="1" max="1440"><small>{{ t('settings.grace_hint') }}</small></label>
+      </div>
+      <div class="field-line">
+        <span class="field-label">{{ t('settings.days') }}</span>
+        <div class="days" id="scheduler-days">{% for label in t('settings.weekdays') %}<label><input type="checkbox" name="days" value="{{ loop.index }}"><span>{{ label }}</span></label>{% endfor %}</div>
+      </div>
+      <label class="check field-line"><input name="scan_before_run" type="checkbox"><span>{{ t('settings.scan_first') }}<small>{{ t('settings.scan_first_hint') }}</small></span></label>
+    </fieldset>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><div><h2>{{ t('settings.conditions') }}</h2><span class="meta">{{ t('settings.conditions_hint') }}</span></div></div>
+    <fieldset class="plain conditions" data-scheduler-part>
+      <div class="condition"><label class="check"><input name="minimum_size_enabled" type="checkbox"> {{ t('settings.size_from') }}</label><div class="inputs"><input name="minimum_size_value" type="number" min="0" step="0.1"><select name="minimum_size_unit" aria-label="{{ t('settings.size_unit') }}"><option value="mb">{{ t('unit.mb') }}</option><option value="gb">{{ t('unit.gb') }}</option></select></div></div>
+      <div class="condition"><label class="check"><input name="minimum_bitrate_enabled" type="checkbox"> {{ t('settings.bitrate_from') }}</label><div class="inputs"><input name="minimum_bitrate_mbps" type="number" min="0" step="0.1"><em>{{ t('unit.mbps') }}</em></div></div>
+      <div class="condition"><label class="check"><input name="minimum_duration_enabled" type="checkbox"> {{ t('settings.duration_from') }}</label><div class="inputs"><input name="minimum_duration_seconds" type="number" min="0"><em>{{ t('unit.seconds') }}</em></div></div>
+      <div class="condition"><label class="check"><input name="minimum_age_enabled" type="checkbox"> {{ t('settings.index_age') }}</label><div class="inputs"><input name="minimum_age_hours" type="number" min="0"><em>{{ t('unit.hours') }}</em></div></div>
+      <div class="condition"><label class="check"><input name="resolution_enabled" type="checkbox"> {{ t('settings.resolution_from') }}</label><div class="inputs"><input name="minimum_width" type="number" min="0" aria-label="{{ t('settings.width') }}"><em>×</em><input name="minimum_height" type="number" min="0" aria-label="{{ t('settings.height') }}"></div></div>
+      <div class="condition"><label class="check"><input name="path_enabled" type="checkbox"> {{ t('settings.path_contains') }}</label><div class="inputs"><input name="path_contains" type="text" placeholder="{{ t('settings.path_placeholder') }}"></div></div>
+      <div class="condition wide"><label class="check"><input name="codec_enabled" type="checkbox"> {{ t('settings.source_codecs') }}</label><div class="inputs codecs"><label class="check"><input type="checkbox" name="codecs" value="h264"> H.264</label><label class="check"><input type="checkbox" name="codecs" value="hevc"> HEVC</label><label class="check"><input type="checkbox" name="codecs" value="av1"> AV1</label><label class="check"><input type="checkbox" name="codecs" value="vp9"> VP9</label></div></div>
+      <div class="condition wide"><label class="check"><input name="exclude_handbrake_tagged" type="checkbox"> {{ t('settings.exclude_handbrake') }}</label></div>
+    </fieldset>
+    <div class="form-foot start"><button id="preview-scheduler" class="button" type="button">{{ t('settings.preview') }}</button><span id="preview-summary" class="meta"></span></div>
+    <div id="preview-items" class="preview-list" hidden></div>
+  </section>
+
+  <section class="card danger-zone">
+    <div class="card-head"><div><h2>{{ t('settings.file_actions') }}</h2><span class="meta">{{ t('settings.file_actions_hint') }}</span></div></div>
+    <fieldset class="plain" data-scheduler-part>
+      <div class="auto-action">
+        <label class="switch"><input name="auto_replace_ready" type="checkbox" aria-label="{{ t('settings.auto_replace') }}"><span></span></label>
+        <div><strong>{{ t('settings.auto_replace') }}</strong><p>{{ t('settings.auto_replace_hint') }}</p></div>
+        <span class="state-badge" data-state-for="auto_replace_ready"></span>
+      </div>
+      <div class="auto-action">
+        <label class="switch"><input name="cleanup_backups_enabled" type="checkbox" aria-label="{{ t('settings.delete_backups') }}"><span></span></label>
+        <div><strong>{{ t('settings.delete_backups') }}</strong>
+          <p class="inline-field">{{ t('settings.retention_before') }} <input name="backup_retention_days" type="number" min="1" max="36500" aria-label="{{ t('settings.days_label') }}"> {{ t('settings.retention_after') }}</p>
+          <p>{{ t('settings.delete_backups_hint') }}</p></div>
+        <span class="state-badge" data-state-for="cleanup_backups_enabled"></span>
+      </div>
+    </fieldset>
+  </section>
+
+  <div class="save-bar"><span class="dirty-note" hidden>{{ t('settings.unsaved') }}</span><button id="reset-scheduler" class="button ghost" type="button" hidden>{{ t('settings.revert') }}</button><button class="button primary" type="submit">{{ t('settings.save_scheduler') }}</button></div>
+</form>
+{% endblock %}

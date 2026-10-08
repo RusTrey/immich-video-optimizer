@@ -1,0 +1,82 @@
+# syntax=docker/dockerfile:1
+
+FROM debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132 AS handbrake-builder
+
+ARG HANDBRAKE_VERSION=1.11.2
+ARG HANDBRAKE_SHA256=12b046350f2422dc28783ff94229aff4ba5fe5e683431e057355d36163b2593a
+ARG BUILD_JOBS=4
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        autoconf automake build-essential bzip2 ca-certificates cmake curl git \
+        libass-dev libbz2-dev libfontconfig-dev libfreetype6-dev libfribidi-dev \
+        libharfbuzz-dev libjansson-dev liblzma-dev libmp3lame-dev libnuma-dev \
+        libogg-dev libopus-dev libsamplerate0-dev libspeex-dev libtheora-dev \
+        libtool libtool-bin libturbojpeg0-dev libvorbis-dev libx264-dev \
+        libxml2-dev libvpx-dev m4 make meson nasm ninja-build patch pkg-config \
+        python3 tar xz-utils zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+RUN curl --fail --location --retry 3 \
+        --output handbrake.tar.bz2 \
+        "https://github.com/HandBrake/HandBrake/releases/download/${HANDBRAKE_VERSION}/HandBrake-${HANDBRAKE_VERSION}-source.tar.bz2" \
+    && echo "${HANDBRAKE_SHA256}  handbrake.tar.bz2" | sha256sum --check --strict \
+    && mkdir source \
+    && tar --extract --bzip2 --file handbrake.tar.bz2 --directory source --strip-components=1 \
+    && cd source \
+    && ./configure --disable-gtk --launch-jobs="${BUILD_JOBS}" --launch \
+    && test -x build/HandBrakeCLI \
+    && build/HandBrakeCLI --version
+
+
+FROM debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132 AS runtime
+
+ARG VERSION=dev
+ARG HANDBRAKE_VERSION=1.11.2
+
+LABEL org.opencontainers.image.title="Immich Video Optimizer" \
+      org.opencontainers.image.description="Validated sequential video optimization for an Immich media store" \
+      org.opencontainers.image.source="https://github.com/RusTrey/immich-video-optimizer" \
+      org.opencontainers.image.url="https://github.com/RusTrey/immich-video-optimizer" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.licenses="MIT"
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates ffmpeg gunicorn handbrake-cli libimage-exiftool-perl \
+        python3-flask tini util-linux \
+    && rm -rf /var/lib/apt/lists/*
+
+# Debian supplies the verified runtime dependency set. The CLI is replaced with
+# the checksum-pinned upstream build produced in the previous stage.
+COPY --from=handbrake-builder /build/source/build/HandBrakeCLI /usr/local/bin/HandBrakeCLI
+COPY --from=handbrake-builder /build/source/COPYING /usr/share/doc/handbrake-upstream/COPYING
+
+WORKDIR /app
+COPY app ./app
+COPY tests ./tests
+
+RUN python3 -m unittest discover -s tests -v \
+    && HandBrakeCLI --version \
+    && ffmpeg -version >/dev/null \
+    && ffprobe -version >/dev/null \
+    && exiftool -ver \
+    && mkdir -p /state
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    OPTIMIZER_DB=/state/optimizer.sqlite3 \
+    MEDIA_ROOTS=/storage/data/library:/storage/data/upload \
+    WORK_ROOT=/storage/optimizer-work \
+    PORT=8090
+
+USER root
+EXPOSE 8090
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD python3 -c "import os,urllib.request; urllib.request.urlopen('http://127.0.0.1:' + os.environ.get('PORT','8090') + '/api/status', timeout=4)" || exit 1
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["sh", "-c", "exec gunicorn --chdir /app --bind 0.0.0.0:${PORT:-8090} --workers 1 --threads 4 --worker-class gthread --timeout 0 --access-logfile - app.web:app"]

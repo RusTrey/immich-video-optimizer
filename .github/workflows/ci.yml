@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  # Tests run inside the release image, with the same HandBrake build users get.
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e
+
+      - name: Build the release image and run tests in it
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a
+        with:
+          context: .
+          file: Dockerfile.release
+          platforms: linux/amd64
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Check JavaScript syntax
+        run: node --check app/static/app.js
+
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Validate example Compose file
+        env:
+          IMMICH_STORAGE: /srv/immich
+          OPTIMIZER_STATE: /srv/immich-video-optimizer
+        run: docker compose -f compose.example.yml config -q

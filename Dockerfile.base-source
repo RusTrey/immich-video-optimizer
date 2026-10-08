@@ -1,0 +1,60 @@
+# syntax=docker/dockerfile:1
+
+FROM debian:13-slim AS handbrake-builder
+
+ARG HANDBRAKE_VERSION=1.11.2
+ARG HANDBRAKE_SHA256=12b046350f2422dc28783ff94229aff4ba5fe5e683431e057355d36163b2593a
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        autoconf automake build-essential bzip2 ca-certificates cmake curl git \
+        libass-dev libbz2-dev libfontconfig-dev libfreetype6-dev libfribidi-dev \
+        libharfbuzz-dev libjansson-dev liblzma-dev libmp3lame-dev libnuma-dev \
+        libogg-dev libopus-dev libsamplerate0-dev libspeex-dev libtheora-dev \
+        libtool libtool-bin libturbojpeg0-dev libvorbis-dev libx264-dev \
+        libxml2-dev libvpx-dev m4 make meson nasm ninja-build patch pkg-config \
+        python3 tar xz-utils zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+RUN curl --fail --location --retry 3 \
+        --output handbrake.tar.bz2 \
+        "https://github.com/HandBrake/HandBrake/releases/download/${HANDBRAKE_VERSION}/HandBrake-${HANDBRAKE_VERSION}-source.tar.bz2" \
+    && echo "${HANDBRAKE_SHA256}  handbrake.tar.bz2" | sha256sum --check --strict \
+    && mkdir source \
+    && tar --extract --bzip2 --file handbrake.tar.bz2 --directory source --strip-components=1 \
+    && cd source \
+    && ./configure --disable-gtk --launch-jobs="$(nproc)" --launch \
+    && test -x build/HandBrakeCLI \
+    && build/HandBrakeCLI --version
+
+
+FROM debian:13-slim AS runtime
+
+ARG HANDBRAKE_VERSION=1.11.2
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates ffmpeg gunicorn handbrake-cli libimage-exiftool-perl \
+        python3-flask tini \
+    && rm -rf /var/lib/apt/lists/*
+
+# Debian's package supplies the verified runtime dependency set. The binary is
+# replaced by the pinned upstream CLI built in the previous stage.
+COPY --from=handbrake-builder /build/source/build/HandBrakeCLI /usr/local/bin/HandBrakeCLI
+
+RUN mkdir -p /app /state \
+    && HandBrakeCLI --version \
+    && ffmpeg -version >/dev/null \
+    && ffprobe -version >/dev/null \
+    && exiftool -ver
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    OPTIMIZER_DB=/state/optimizer.sqlite3 \
+    MEDIA_ROOTS=/storage/data/library:/storage/data/upload \
+    WORK_ROOT=/storage/optimizer-work \
+    PORT=8090
+
+WORKDIR /app
