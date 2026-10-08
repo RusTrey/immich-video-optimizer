@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ t('queue.title') }} · Video Optimizer{% endblock %}
+{% block content %}
+<header class="page-head">
+  <h1>{{ t('queue.title') }}</h1>
+  <span class="page-meta">{{ t('queue.subtitle') }}</span>
+  <div class="page-actions">{% if replacement_enabled %}<button id="replace-ready" class="button warning" type="button" hidden></button>{% endif %}</div>
+</header>
+
+<section id="current-job" class="card now-card"></section>
+
+<section class="card">
+  <div class="toolbar">
+    <div id="queue-filter" class="chips" role="group" aria-label="{{ t('table.status') }}">
+      <button type="button" data-filter="" class="active">{{ t('queue.filter_all') }}</button>
+      <button type="button" data-filter="queued,running">{{ t('queue.filter_active') }}</button>
+      <button type="button" data-filter="ready">{{ t('queue.filter_ready') }}</button>
+      <button type="button" data-filter="failed,interrupted,rejected_saving,replacement_interrupted">{{ t('queue.filter_problems') }}</button>
+    </div>
+    <span id="queue-total" class="meta"></span>
+  </div>
+  <div class="table-wrap"><table class="data-table jobs-table"><thead><tr>
+    <th data-sort="id" class="num-col">{{ t('table.number') }}</th><th data-sort="status">{{ t('table.status') }}</th><th data-sort="file">{{ t('table.file') }}</th>
+    <th data-sort="size" class="right">{{ t('table.size') }}</th><th data-sort="source">{{ t('table.added_by') }}</th><th class="actions">{{ t('table.actions') }}</th>
+  </tr></thead><tbody id="queue-rows"><tr><td colspan="6" class="empty">{{ t('table.loading') }}</td></tr></tbody></table></div>
+  <div id="queue-pagination" class="pagination"></div>
+</section>
+{% endblock %}

@@ -1,0 +1,33 @@
+services:
+  immich-video-optimizer:
+    image: ghcr.io/rustrey/immich-video-optimizer:0.9.5
+    container_name: immich_video_optimizer
+    restart: unless-stopped
+    environment:
+      # Also the default time zone of the scheduler (editable in Settings).
+      TZ: ${TZ:-UTC}
+      OPTIMIZER_DB: /state/optimizer.sqlite3
+      MEDIA_ROOTS: /storage/data/library:/storage/data/upload
+      WORK_ROOT: /storage/optimizer-work
+      MINIMUM_SAVING_PERCENT: "20"
+      REPLACEMENT_ENABLED: "false"
+      PORT: "8090"
+    ports:
+      - "127.0.0.1:8090:8090"
+    volumes:
+      - ${IMMICH_STORAGE:?Set IMMICH_STORAGE to the parent containing data and optimizer-work}:/storage:rw
+      - ${OPTIMIZER_STATE:?Set OPTIMIZER_STATE to a persistent state directory}:/state
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    # Root is needed only to keep owner and mode of media files on replacement.
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    mem_limit: 1536m

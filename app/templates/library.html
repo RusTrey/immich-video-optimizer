@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ t('library.title') }} · Video Optimizer{% endblock %}
+{% block content %}
+<header class="page-head">
+  <h1>{{ t('library.title') }}</h1>
+  <span id="library-index" class="page-meta"></span>
+  <div class="page-actions"><button id="library-scan-button" class="button" type="button">{{ t('library.refresh') }}</button></div>
+</header>
+
+<section class="card">
+  <form id="library-filters" class="filters">
+    <label class="grow"><span>{{ t('library.search') }}</span><input name="query" type="search" placeholder="{{ t('library.search_placeholder') }}"></label>
+    <label><span>{{ t('library.video_codec') }}</span><select name="codec"><option value="">{{ t('library.any') }}</option><option value="h264">H.264</option><option value="hevc">HEVC</option><option value="av1">AV1</option><option value="vp9">VP9</option></select></label>
+    <label><span>{{ t('library.processing') }}</span><select name="classification"><option value="">{{ t('library.any_f') }}</option><option value="untracked">{{ t('library.untracked') }}</option><option value="historical_handbrake">{{ t('library.handbrake') }}</option></select></label>
+    <label class="narrow"><span>{{ t('library.minimum_size') }}</span><input name="minimum_mib" type="number" min="0" step="100" placeholder="0"></label>
+    <label class="narrow"><span>{{ t('library.minimum_bitrate') }}</span><input name="minimum_bitrate_mbps" type="number" min="0" step="1" placeholder="0"></label>
+    <button id="reset-filters" class="button ghost" type="button">{{ t('library.reset') }}</button>
+  </form>
+  <div class="toolbar">
+    <label class="check"><input id="select-page" type="checkbox"> {{ t('library.select_page') }}</label>
+    <span id="library-total" class="meta"></span>
+    <button id="enqueue-filtered" class="button small" type="button">{{ t('library.enqueue_all') }}</button>
+  </div>
+  <div class="table-wrap"><table class="data-table library-table"><thead><tr>
+    <th class="check-col"></th><th data-sort="path">{{ t('table.file') }}</th><th data-sort="size" class="right">{{ t('table.size') }}</th>
+    <th data-sort="codec">{{ t('table.video') }}</th><th data-sort="bitrate" class="right">{{ t('table.bitrate') }}</th>
+    <th data-sort="duration" class="right">{{ t('table.duration') }}</th><th data-sort="status">{{ t('table.status') }}</th>
+  </tr></thead><tbody id="library-rows"><tr><td colspan="7" class="empty">{{ t('table.loading') }}</td></tr></tbody></table></div>
+  <div id="library-pagination" class="pagination"></div>
+</section>
+
+<div id="selection-bar" class="selection-bar" hidden>
+  <span id="selected-count"></span>
+  <button id="clear-selection" class="button ghost small" type="button">{{ t('library.clear_selection') }}</button>
+  <button id="enqueue-selected" class="button primary small" type="button">{{ t('library.enqueue_selected') }}</button>
+</div>
+{% endblock %}

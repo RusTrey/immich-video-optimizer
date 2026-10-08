@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:,">
+  <title>{% block title %}{{ t('app.title') }}{% endblock %}</title>
+  <script>try{var theme=localStorage.getItem('optimizer-theme');if(theme==='black')theme='dark';if(theme==='light'||theme==='dark')document.documentElement.dataset.theme=theme;}catch(_){}</script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css', v=version) }}">
+  <script>window.APP_LANGUAGE={{ lang|tojson }};window.APP_MESSAGES={{ messages|tojson }};window.APP_STATUSES={{ status_groups|tojson }};</script>
+  <script defer src="{{ url_for('static', filename='app.js', v=version) }}"></script>
+</head>
+<body data-page="{{ active }}" data-replacement-enabled="{{ 'true' if replacement_enabled else 'false' }}">
+  <svg class="icon-sprite" aria-hidden="true">
+    <symbol id="icon-home" viewBox="0 0 24 24"><path d="M3.5 11.2 12 4l8.5 7.2v8.3H15v-5h-6v5H3.5v-8.3Z"/></symbol>
+    <symbol id="icon-queue" viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h9"/><path d="m17 15 3 3-3 3"/></symbol>
+    <symbol id="icon-library" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></symbol>
+    <symbol id="icon-history" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><path d="M4 7h7M15 7h5M4 17h3M11 17h9M9 4v6M9 14v6M13 14v6M13 4v6"/><circle cx="13" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="icon-play" viewBox="0 0 24 24"><path class="icon-fill" d="M8.5 6.9v10.2a1 1 0 0 0 1.53.85l8.1-5.1a1 1 0 0 0 0-1.7l-8.1-5.1a1 1 0 0 0-1.53.85Z"/></symbol>
+    <symbol id="icon-compare" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M12 3v18"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10Z"/></symbol>
+    <symbol id="icon-auto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path class="icon-fill" d="M12 3.5a8.5 8.5 0 0 1 0 17Z"/></symbol>
+    <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  </svg>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><strong>Video Optimizer</strong><span>{{ t('app.for_immich') }}</span></div>
+      <nav aria-label="{{ t('nav.main') }}">
+        <a class="{{ 'active' if active == 'overview' }}" href="{{ url_for('overview_page') }}"><svg class="nav-icon" aria-hidden="true"><use href="#icon-home"/></svg>{{ t('nav.overview') }}<em id="nav-attention" class="nav-badge danger" hidden></em></a>
+        <a class="{{ 'active' if active == 'queue' }}" href="{{ url_for('queue_page') }}"><svg class="nav-icon" aria-hidden="true"><use href="#icon-queue"/></svg>{{ t('nav.queue') }}<em id="nav-queue-count" class="nav-badge" hidden></em></a>
+        <a class="{{ 'active' if active == 'library' }}" href="{{ url_for('library_page') }}"><svg class="nav-icon" aria-hidden="true"><use href="#icon-library"/></svg>{{ t('nav.library') }}</a>
+        <a class="{{ 'active' if active == 'journal' }}" href="{{ url_for('journal_page') }}"><svg class="nav-icon" aria-hidden="true"><use href="#icon-history"/></svg>{{ t('nav.journal') }}</a>
+        <a class="{{ 'active' if active == 'settings' }}" href="{{ url_for('settings_page') }}"><svg class="nav-icon" aria-hidden="true"><use href="#icon-settings"/></svg>{{ t('nav.settings') }}</a>
+      </nav>
+      <div class="sidebar-foot">
+        <p class="version">{{ t('nav.version', version=version) }}{% if not replacement_enabled %} · <span title="{{ t('nav.read_only_hint') }}">{{ t('nav.read_only') }}</span>{% endif %}</p>
+        <div class="prefs">
+          <div class="segmented" aria-label="{{ t('language.label') }}">
+            <a class="{{ 'active' if lang == 'ru' }}" href="{{ url_for('change_language', language='ru', next=request.full_path) }}">RU</a>
+            <a class="{{ 'active' if lang == 'en' }}" href="{{ url_for('change_language', language='en', next=request.full_path) }}">EN</a>
+          </div>
+          <div class="segmented theme-switch" role="group" aria-label="{{ t('theme.label') }}">
+            <button type="button" data-theme-choice="dark" title="{{ t('theme.dark') }}" aria-label="{{ t('theme.dark') }}"><svg aria-hidden="true"><use href="#icon-moon"/></svg></button>
+            <button type="button" data-theme-choice="auto" title="{{ t('theme.auto') }}" aria-label="{{ t('theme.auto') }}"><svg aria-hidden="true"><use href="#icon-auto"/></svg></button>
+            <button type="button" data-theme-choice="light" title="{{ t('theme.light') }}" aria-label="{{ t('theme.light') }}"><svg aria-hidden="true"><use href="#icon-sun"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <button id="sidebar-backdrop" class="sidebar-backdrop" type="button" aria-label="{{ t('nav.close') }}"></button>
+
+    <main class="main-content">
+      <header class="mobile-head">
+        <button id="menu-toggle" class="icon-button" type="button" aria-label="{{ t('nav.open') }}"><svg aria-hidden="true"><use href="#icon-menu"/></svg></button>
+        <strong>Video Optimizer</strong>
+      </header>
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <dialog id="confirm-dialog" class="modal confirm-dialog">
+    <form method="dialog">
+      <h3 id="confirm-title">{{ t('dialog.confirm') }}</h3>
+      <p id="confirm-message"></p>
+      <div class="dialog-actions">
+        <button class="button" value="cancel">{{ t('dialog.cancel') }}</button>
+        <button id="confirm-accept" class="button danger" value="confirm">{{ t('dialog.continue') }}</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="job-drawer" class="drawer" aria-labelledby="job-drawer-title">
+    <header class="drawer-head">
+      <div><span id="job-drawer-number" class="muted mono"></span><h2 id="job-drawer-title">{{ t('job.title') }}</h2></div>
+      <button class="icon-button" type="button" data-close-dialog aria-label="{{ t('dialog.close') }}"><svg aria-hidden="true"><use href="#icon-close"/></svg></button>
+    </header>
+    <div id="job-drawer-body" class="drawer-body"><p class="muted">{{ t('table.loading') }}</p></div>
+  </dialog>
+
+  <dialog id="video-dialog" class="modal video-dialog">
+    <header class="dialog-head">
+      <strong id="video-dialog-title">{{ t('video.title') }}</strong>
+      <div id="compare-modes" class="segmented" role="group" hidden>
+        <button type="button" data-compare-mode="side">{{ t('compare.side') }}</button>
+        <button type="button" data-compare-mode="toggle">{{ t('compare.toggle') }}</button>
+      </div>
+      <button class="icon-button" type="button" data-close-dialog aria-label="{{ t('dialog.close') }}"><svg aria-hidden="true"><use href="#icon-close"/></svg></button>
+    </header>
+    <div id="video-stage" class="video-stage">
+      <figure data-slot="a"><figcaption></figcaption><video playsinline preload="metadata" controls></video></figure>
+      <figure data-slot="b" hidden><figcaption></figcaption><video playsinline preload="metadata" controls muted></video></figure>
+    </div>
+    <footer class="dialog-foot">
+      <button id="compare-swap" class="button" type="button" hidden>{{ t('compare.swap') }}</button>
+      <p>{{ t('video.hint') }}</p>
+    </footer>
+  </dialog>
+</body>
+</html>

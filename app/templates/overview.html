@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ t('overview.title') }} · Video Optimizer{% endblock %}
+{% block content %}
+<header class="page-head">
+  <h1>{{ t('overview.title') }}</h1>
+  <div class="page-actions"><button id="scan-button" class="button" type="button">{{ t('overview.scan') }}</button></div>
+</header>
+
+<section class="kpis" aria-label="{{ t('overview.summary') }}">
+  <article class="kpi"><span>{{ t('overview.saved') }}</span><strong id="kpi-saved" class="positive">—</strong><small id="kpi-saved-detail"></small></article>
+  <a class="kpi" href="#attention"><span>{{ t('overview.attention') }}</span><strong id="kpi-attention">—</strong><small id="kpi-attention-detail"></small></a>
+  <a class="kpi" href="{{ url_for('queue_page') }}"><span>{{ t('overview.ready') }}</span><strong id="kpi-ready">—</strong><small id="kpi-ready-detail"></small></a>
+  <a class="kpi" href="{{ url_for('library_page') }}"><span>{{ t('overview.index') }}</span><strong id="kpi-index">—</strong><small id="kpi-index-detail"></small></a>
+</section>
+
+<section id="attention" class="card attention" hidden>
+  <div class="card-head"><h2>{{ t('overview.attention') }}</h2><button id="dismiss-events" class="button small ghost" type="button" hidden>{{ t('overview.dismiss_all') }}</button></div>
+  <ul id="attention-items" class="notice-list"></ul>
+</section>
+
+<div class="overview-grid">
+  <section class="card plan">
+    <div class="card-head">
+      <div><h2 id="plan-title">{{ t('plan.next_run') }}</h2><span id="plan-when" class="meta"></span></div>
+      <div class="head-actions">
+        <button id="run-scheduler-now" class="button small" type="button">{{ t('plan.run_now') }}</button>
+        <a class="button small ghost" href="{{ url_for('settings_page') }}#scheduler">{{ t('plan.configure') }}</a>
+      </div>
+    </div>
+    <ol id="plan-steps" class="steps"><li class="muted">{{ t('table.loading') }}</li></ol>
+    <p id="plan-last" class="card-foot muted"></p>
+  </section>
+
+  <div class="side-stack">
+    <section class="card">
+      <div class="card-head"><h2>{{ t('overview.now') }}</h2></div>
+      <div class="activity">
+        <div id="encode-activity" class="activity-row"></div>
+        <div id="scan-activity" class="activity-row"></div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>{{ t('overview.storage') }}</h2></div>
+      <dl class="facts">
+        <div><dt>{{ t('overview.disk_free') }}</dt><dd id="fact-disk">—</dd></div>
+        <div><dt>{{ t('overview.library_volume') }}</dt><dd id="fact-volume">—</dd></div>
+        <div><dt>{{ t('overview.backups') }}</dt><dd id="fact-backups">—</dd></div>
+        <div><dt>{{ t('overview.next_cleanup') }}</dt><dd id="fact-cleanup">—</dd></div>
+      </dl>
+    </section>
+  </div>
+</div>
+{% endblock %}
