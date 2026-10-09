@@ -161,7 +161,8 @@ docker build -f Dockerfile.release \
 ```
 
 Prebuilt images are on GitHub Container Registry:
-`ghcr.io/rustrey/immich-video-optimizer:<version>`. The release image builds
+`ghcr.io/rustrey/immich-video-optimizer`, tagged with the version (`0.9.5`), the
+minor line (`0.9`) and `latest`. Pin the exact version on a server. The release image builds
 HandBrake 1.11.2 from the official sources with a SHA-256 check and is published
 with an SBOM and provenance.
 

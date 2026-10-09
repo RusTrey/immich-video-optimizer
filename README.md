@@ -162,7 +162,8 @@ docker build -f Dockerfile.release \
 ```
 
 Готовые образы — в GitHub Container Registry:
-`ghcr.io/rustrey/immich-video-optimizer:<версия>`. Release-образ собирает
+`ghcr.io/rustrey/immich-video-optimizer` с тегами версии (`0.9.5`), минорной
+ветки (`0.9`) и `latest`. Для сервера лучше закрепить точную версию. Release-образ собирает
 HandBrake 1.11.2 из официальных исходников с проверкой SHA-256 и публикуется с
 SBOM и provenance.
 
